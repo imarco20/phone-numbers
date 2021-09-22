@@ -5,6 +5,14 @@ import (
 	"fmt"
 )
 
+var CountryCodes = map[string]string{
+	"(237)": "Cameron",
+	"(251)": "Ethiopia",
+	"(212)": "Morocco",
+	"(258)": "Mozambique",
+	"(256)": "Uganda",
+}
+
 type Customer struct {
 	ID          int
 	Name        string
