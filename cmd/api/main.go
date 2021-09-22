@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"marcode.io/phone-numbers/pkg/data"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 )
 
@@ -60,9 +62,26 @@ func main() {
 
 	logger.Printf("starting server on %s", server.Addr)
 
-	err = server.ListenAndServe()
-	if err != nil {
+	go func() {
+		err = server.ListenAndServe()
 		logger.Fatal(err)
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+	signal.Notify(sigChan, os.Kill)
+
+	sig := <-sigChan
+	logger.Println("Received terminate, graceful shutdown", sig)
+
+	// Graceful Shutdown for the server
+	tc, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+	defer cancel()
+
+	err = server.Shutdown(tc)
+	if err != nil {
+		logger.Println(err)
 	}
 }
 
